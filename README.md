@@ -1,0 +1,162 @@
+# Code Tutor
+
+> AI가 만든 코드를 "읽는" 게 아니라 "내 지식으로 만드는" Claude Code 학습 스킬
+
+AI가 코드를 대신 짜주는 시대에, 정작 그 코드를 이해하지 못한 채 넘어가고 있지 않나요?
+Code Tutor는 AI가 생성한 코드베이스를 **스스로 탐색하며 필요한 만큼 깊게** 학습하도록 안내하는 튜터입니다. 학습 이력은 파일로 축적되어 프로젝트가 바뀌어도 이어집니다.
+
+## 핵심 철학: Expand-first
+
+모든 질문에 장문의 설명을 쏟아내는 튜터는 나쁜 튜터입니다. Code Tutor는:
+
+1. **기본은 짧게** — 질문에 필요한 만큼만 답하고 (Quick)
+2. **깊이는 사용자가 선택** — 매 응답 끝에 탐색 가능한 다음 주제를 번호로 제시하며 (①②③…)
+3. **명시적으로 요청할 때만 깊게** — 심층 분석은 "심층 분석"이라고 말했을 때만 (Deep Dive)
+
+```
+> @Transactional이 뭐야?
+
+**한 줄 요약**
+트랜잭션을 시작·커밋·롤백해주는 Spring 어노테이션입니다.
+
+**프로젝트 역할**
+OrderService(src/service/OrderService.java:42)에서 여러 Repository
+작업을 하나의 작업 단위로 묶습니다.
+
+**더 알아보기**
+① Spring Proxy   ② AOP   ③ Transaction Manager   ④ Isolation Level
+
+> ③
+
+(Transaction Manager만 집중 설명…)
+```
+
+## 응답 모드 5가지
+
+모드는 질문을 보고 자동 판별됩니다. 애매하면 항상 Quick입니다.
+
+| 모드 | 트리거 예시 | 동작 |
+|---|---|---|
+| **Quick** (기본) | "이 함수 뭐야?", "왜 Optional 써?" | 최대 5항목의 간결한 설명 + 탐색 제안 |
+| **Expand** | "③", "Proxy 설명", "MVCC만" | 직전 목록에서 선택한 주제만 집중 설명 |
+| **Deep Dive** | "심층 분석", "내부 동작까지", "면접 수준으로" | 실행 흐름·설계 의도·대안 구현·면접 질문까지 13항목 |
+| **Architecture** | "프로젝트 구조 설명", "API부터 DB까지" | 레이어 구조·의존성·데이터 흐름 분석 |
+| **Learning** | "오늘 배운 것 정리", "복습", "내 수준" | 학습 경로 요약 + Feynman 체크 |
+
+## 학습 상태 추적
+
+### 키워드 단위, 사건 기반
+
+"Transaction을 이해했다" 같은 큰 개념의 진척도는 AI가 대화로 판정하기엔 오류 소지가 큽니다. 그래서 Code Tutor는:
+
+- **최소 키워드 단위로만 기록** — `Transaction`(✕)이 아니라 `Isolation Level`, `Dirty Read`(○)
+- **관찰 가능한 사건으로만 이해도 전이** — "이해한 것 같다"는 인상으로 올리지 않음
+
+| 단계 | 의미 | 전이 사건 |
+|---|---|---|
+| 🔴 | 등장만 함 | "더 알아보기" 목록에 이름이 나옴 |
+| 🟡 | 설명 받음 | 응답의 주제로 다뤄짐 |
+| 🟢 | 예제·적용 확인 | 예제를 봤거나, 이 키워드를 전제로 스스로 후속 질문함 |
+| 🔵 | 검증됨 | Feynman 체크(스스로 설명하기) 통과 |
+
+큰 주제의 진척은 Learning Mode에서 하위 키워드 집계로만 표시됩니다: `Transaction — 하위 7개 중 🟡 3, 🟢 1, 미학습 3`
+
+### 전역 vs 프로젝트
+
+| 위치 | 내용 | 파일 |
+|---|---|---|
+| `~/.claude/memory/code-tutor/` | 프로젝트가 바뀌어도 재사용되는 지식 (CS·프레임워크·언어 문법·라이브러리·패턴) | learning-state.md, knowledge-graph.md, bookmarks.md |
+| `<프로젝트>/.claude/tutor/` | 이 코드베이스 고유 정보 | current-session.md, learning-report.md, codebase-index.md |
+
+새 프로젝트에서도 이미 🟢 이상인 개념은 짧게 넘어가고, 모르는 것 위주로 설명합니다.
+
+### 학습 흐름 관리 (Flow Manager)
+
+- 탐색 경로가 매 턴 기록됩니다: `@Transactional → Proxy → AOP`
+- 다른 주제로 샜다가 **"원래 이야기로 돌아가자"** 하면 이탈 지점의 맥락을 복원합니다.
+- 세션 종료 시 학습 리포트가 자동 생성됩니다.
+
+## 아키텍처와 모델 분리
+
+비싼 판단(교육적 설명)과 기계적 작업(탐색·기록)을 모델 급으로 나눕니다.
+
+| 역할 | 담당 | 모델 |
+|---|---|---|
+| 튜터 설명 | 메인 대화 (스킬) | 세션 모델 (Fable/Opus 권장) |
+| 무거운 코드 탐색 (3개+ 파일 추적, 전체 스캔) | `tutor-explorer` 서브에이전트 | sonnet |
+| 세션 종료 시 일괄 기록 | `tutor-scribe` 서브에이전트 | haiku |
+
+모델은 각 에이전트 파일의 frontmatter `model:` 필드에서 바꿀 수 있습니다.
+
+## 설치
+
+Claude Code가 필요합니다. 저장소를 클론한 뒤 파일을 복사하세요.
+
+**macOS / Linux**
+
+```bash
+mkdir -p ~/.claude/skills ~/.claude/agents
+cp -r skills/code-tutor ~/.claude/skills/
+cp agents/tutor-explorer.md agents/tutor-scribe.md ~/.claude/agents/
+```
+
+**Windows (PowerShell)**
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\skills", "$env:USERPROFILE\.claude\agents"
+Copy-Item -Recurse skills\code-tutor "$env:USERPROFILE\.claude\skills\"
+Copy-Item agents\tutor-explorer.md, agents\tutor-scribe.md "$env:USERPROFILE\.claude\agents\"
+```
+
+별도 등록은 필요 없습니다. **새로 여는 세션부터** 자동 인식됩니다.
+
+> 특정 프로젝트에서만 쓰려면 `~/.claude` 대신 프로젝트의 `.claude/`에 복사하세요. 단, 이 경우 학습 이력이 프로젝트 간에 이어지지 않습니다.
+
+## 사용법
+
+학습할 프로젝트에서 Claude Code 세션을 열고:
+
+| 명령 | 설명 |
+|---|---|
+| `/code-tutor` | 튜터 세션 시작. 이후 질문부터 `end`까지 튜터 모드로 답합니다 |
+| `/code-tutor init` | (선택) 전체 코드베이스 인덱싱. **없어도 동작합니다** — 질문할 때마다 관련 부분만 탐색하고 점진적으로 인덱스를 쌓습니다 |
+| `/code-tutor end` | 세션 정리: 학습 상태 갱신 + 리포트 생성 |
+
+튜터는 `/code-tutor`를 입력했을 때만 켜집니다. 평소 코딩 작업에는 관여하지 않습니다.
+
+권장 흐름:
+
+```
+/code-tutor
+> 이 OrderService 뭐하는 거야?        # Quick
+> ②                                    # Expand — 제시된 주제 탐색
+> 트랜잭션 부분 심층 분석해줘           # Deep Dive
+> 원래 OrderService 이야기로 돌아가자   # 맥락 복귀
+> 오늘 배운 것 정리                     # Learning
+/code-tutor end                         # 리포트 생성
+```
+
+## 팁
+
+- **튜터 세션은 상위 모델로 여세요.** 설명 품질은 세션 모델을 따라갑니다. 탐색·기록은 어차피 하위 모델 서브에이전트가 처리하므로 비용 부담이 생각보다 적습니다.
+- Code Tutor는 **`/code-tutor`로 명시 호출할 때만** 발동합니다. 일반 코딩 작업 중의 질문에 자동으로 끼어들어 컨텍스트를 쌓지 않습니다.
+- 세션 중에도 단순 확인성 질문("그 파일 어디 있어?", "방금 그 용어 뜻이?")에는 튜터 포맷 없이 한두 문장으로만 답합니다.
+- 학습 파일은 전부 사람이 읽을 수 있는 마크다운입니다. 직접 수정해도 되고, `learning-state.md`를 열어 자기 상태를 확인하는 것 자체가 좋은 복습입니다.
+- Code Tutor는 **읽기 전용**입니다. 코드를 수정하지 않습니다.
+
+## 파일 구성
+
+```
+skills/code-tutor/
+├── SKILL.md                       # 진입점: 모드 판별, 워크플로, 서브커맨드
+└── references/
+    ├── modes.md                   # 5개 모드별 상세 응답 포맷
+    └── memory-protocol.md         # 메모리 파일 스키마·갱신 규칙·이해도 전이 기준
+agents/
+├── tutor-explorer.md              # 코드 탐색 서브에이전트 (sonnet)
+└── tutor-scribe.md                # 기록 서브에이전트 (haiku)
+```
+
+## License
+
+MIT
