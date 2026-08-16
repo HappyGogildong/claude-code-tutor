@@ -5,20 +5,22 @@
 | 위치 | 기준 | 파일 |
 |---|---|---|
 | 전역 `~/.claude/memory/code-tutor/` | **프로젝트가 바뀌어도 재사용되는 지식** — CS 이론, 프레임워크, 언어 문법, 라이브러리, 디자인 패턴 | learning-state.md, knowledge-graph.md, bookmarks.md |
-| 프로젝트 `<프로젝트>/.claude/tutor/` | **이 코드베이스 고유 정보** — 파일 위치, 세션 흐름, 프로젝트 구조 | current-session.md, learning-report.md, codebase-index.md |
+| 프로젝트 `<프로젝트>/.claude/tutor/` | **이 코드베이스 고유 정보** — 프로젝트 구조·파일 위치 | learning-report.md, codebase-index.md |
 
 전역 파일에 프로젝트 파일 경로를 적지 않는다. 프로젝트 파일에 개념 설명을 길게 적지 않는다(이름과 링크만).
+
+세션의 탐색 흐름·"③" 목록·"돌아가자" 복귀 지점은 **대화 컨텍스트가 보유**하므로 파일로 남기지 않는다(별도 세션 파일 없음). 디스크에는 durable한 학습 변화만 기록한다.
 
 ## 갱신 타이밍
 
 | 시점 | 갱신 대상 | 내용 |
 |---|---|---|
-| 매 턴 (응답 직후) | current-session.md | 탐색 노드 1줄 append + 방금 제시한 "더 알아보기" 번호 목록 교체 |
-| 주제 전환 시 | knowledge-graph.md, learning-state.md | 개념 연결 추가, 새 개념 🔴 또는 🟡로 등록 |
-| Feynman 체크 통과 시 | learning-state.md | 해당 개념 🔵로 승급 |
-| `/code-tutor end` | 전부 | learning-state 일괄 갱신, learning-report append, bookmarks 정리, current-session 완료 표시 — 메인 대화가 사건 목록을 정리해 `tutor-scribe`(haiku)에 위임 |
+| 주제 전환 시 (flush) | knowledge-graph.md, learning-state.md | 연상 엣지 추가, 새 키워드 🔴/🟡 등록, 전이 반영 |
+| 연결 발견 시 | knowledge-graph.md | 새 개념이 기존 학습과 닿으면 연상 엣지 추가 |
+| Feynman·캘리브레이션 통과 시 | learning-state.md | 해당 키워드 🔵 승급 (틀리면 강등) |
+| `/code-tutor end` | 전부 | learning-state 일괄 갱신, learning-report append, bookmarks 정리 — 메인 대화가 사건 목록을 정리해 `tutor-scribe`(haiku)에 위임 |
 
-매 턴 갱신은 current-session.md **하나만**. 전역 파일을 매 턴 고치지 않는다 (토큰 낭비).
+매 턴 파일을 쓰지 않는다. 전역 파일은 주제 전환·연결 발견 시에만 flush 하므로, 컨텍스트 압축 손실 창은 "직전 주제 하나"로 제한된다.
 
 ## 항목 단위: 키워드
 
@@ -39,10 +41,11 @@ learning-state의 항목은 **한 번의 설명으로 온전히 다룰 수 있�
 | 🔴 | 등장만 함 | "더 알아보기" 목록에 이름이 나옴 |
 | 🟡 | 설명 받음 | 이 키워드가 응답의 주제로 다뤄짐 |
 | 🟢 | 예제·적용 확인 | 예제 코드를 봤거나, 이 키워드를 전제로 스스로 후속 질문을 함 |
-| 🔵 | 검증됨 | Feynman 체크 통과 또는 사용자가 스스로 정확히 설명함 |
+| 🔵 | 검증됨 | Feynman 체크·캘리브레이션 퀴즈 통과, 또는 사용자가 스스로 정확히 설명함 |
 
+- **Probe(사전 진단)**: 채점형 객관식 측정 결과를 반영 — 맞힘 🟢, 설명만 받고 미검증 🟡, 틀림·"모르겠다" 🔴. (상세는 modes.md §0)
 - 사용자 자기보고("이건 이미 알아") → 즉시 🟢, Feynman으로 검증되면 🔵.
-- 강등: 사용자가 🟢 이상 키워드를 다시 기초부터 물으면 🟡로 내린다.
+- **강등 (캘리브레이션)**: 주기적 확인 질문에 틀리면 한 단계 내린다(🔵→🟢, 🟢→🟡). 🟢 이상 키워드를 다시 기초부터 물어도 🟡로 내린다. 강등은 실패가 아니라 정직한 재조정이다. (상세는 modes.md)
 
 ---
 
@@ -78,27 +81,28 @@ learning-state의 항목은 **한 번의 설명으로 온전히 다룰 수 있�
 
 ### knowledge-graph.md (전역)
 
+**이것은 선수지식 트리가 아니라 연상 그래프(associative graph)다.** "무엇을 알아야 이걸 이해하나"의 하향식 분해가 아니라, **"내가 실제로 만진 것들이 어떻게 서로 닿는가"를 아래에서 위로 축적**한 것이다. 코딩 학습은 흩어진 섬이므로, 이 그래프의 가치는 그 섬들을 잇는 데 있다.
+
+트리 형태로 적되 엣지는 선수관계가 아니라 **개념적 인접**을 뜻한다. 특히 **인스턴스→패턴** 링크를 적극적으로 만든다: "이 코드는 패턴 P의 사례다 → P가 내가 배운 어디에 또 나오나".
+
 ```markdown
 # Knowledge Graph
 
-<!-- 개념 간 연결. 트리 형식, 개념 이름만. 프로젝트 파일 경로 금지 -->
+<!-- 연상 그래프: 실제로 만진 개념들이 어떻게 닿는가. 개념 이름만, 프로젝트 파일 경로 금지.
+     엣지 = 개념적 인접(선수관계 아님). 인스턴스→패턴 링크를 적극 추가. -->
 
 ## Database
-SQL
-├── Index
-│   └── B+Tree
+Connection Pool
+├── pool.query vs pool.connect
+│   └── (연결) withTransaction 콜백 패턴 — 같은 커넥션 보장이라는 같은 문제
 └── Transaction
-    ├── Lock
+    ├── Isolation Level
     └── MVCC
-
-## Spring
-@Transactional
-├── Proxy
-│   └── AOP
-└── Transaction Manager
 ```
 
-새 연결은 기존 트리에 붙이고, 어느 트리에도 안 붙으면 새 루트를 만든다.
+- 새 개념은 실제로 닿는 기존 노드에 엣지로 붙인다. 어디에도 안 닿으면 새 루트(새 섬)로 둔다.
+- 세션·프로젝트를 넘어 닿으면 그 엣지를 반드시 추가한다 — 이것이 섬을 잇는 핵심 작업.
+- `(연결)` 주석처럼 왜 닿는지 한 줄 근거를 남기면 나중에 소급 상기(spaced resurfacing)에 쓸 수 있다.
 
 ### bookmarks.md (전역)
 
@@ -113,30 +117,7 @@ SQL
 
 학습 완료 시 체크하고 learning-state로 옮긴다.
 
-### current-session.md (프로젝트)
-
-```markdown
-# Current Session
-
-- 시작: YYYY-MM-DD HH:mm
-- 상태: 진행 중 | 완료
-
-## 탐색 흐름
-<!-- 매 턴 1줄 append. 형식: 모드 | 주제 | 코드 위치 -->
-1. Quick | @Transactional | src/service/OrderService.java:42
-2. Expand | Transaction Manager | (개념)
-3. Quick | UserController | src/api/UserController.java:15   ← 새 갈래
-
-## 직전 "더 알아보기" 목록
-<!-- 매 턴 교체. 번호 참조("③") 복원용 -->
-① Spring Proxy
-② AOP
-③ Isolation Level
-
-## 보류 중인 갈래
-<!-- "원래 이야기로 돌아가자" 복귀 지점 -->
-- @Transactional (2번 노드에서 이탈) — 남은 항목: ①③
-```
+> **세션 상태 파일은 두지 않는다.** 탐색 흐름·"③" 목록·복귀 지점은 대화 컨텍스트가 보유하므로 디스크에 중복 저장하지 않는다. 섬형 사용에서는 이전 세션을 선형으로 이어가지 않으므로 세션 재개 기능도 불필요하다.
 
 ### learning-report.md (프로젝트)
 
