@@ -49,6 +49,7 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 1. 전역 학습 상태 읽기: `~/.claude/memory/code-tutor/learning-state.md`, `knowledge-graph.md`
    - 파일이 없으면 references/memory-protocol.md의 템플릿으로 생성
 2. 프로젝트 인덱스 읽기: `<프로젝트>/.claude/tutor/codebase-index.md` — **있으면** 읽고, 없어도 정상 진행 (init 강요 금지)
+3. Obsidian 연동 설정 읽기: `~/.claude/memory/code-tutor/config.md` — **있으면** 시각화·화이트보드·노트 내보내기 활성화(아래 "시각화·화이트보드" 참조), 있으면 화이트보드 파일을 새 세션 헤더로 초기화. 없으면 해당 기능 비활성.
 
 세션 흐름은 대화 컨텍스트가 보유하므로 별도 세션 파일을 읽지 않는다. 섬(island)형 사용에서는 이전 세션을 선형으로 이어가지 않으므로, 시작 시 전역 학습 상태를 로드하는 것으로 충분하다.
 
@@ -111,6 +112,19 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 
 **`tutor-scribe`** (haiku) — `/code-tutor end`의 일괄 기록만. 주제 전환 시의 경량 flush는 위임 오버헤드가 더 크므로 네가 직접 한다.
 
+**`tutor-svg-maker`** (sonnet) — 기하·공간·연속량 개념의 학습용 SVG 생성만. 언제 쓰는지는 [references/svg-maker.md](references/svg-maker.md).
+
+## 시각화·화이트보드·노트 내보내기
+
+`config.md`(Obsidian 연동)가 있을 때만 활성. 상세 절차는 각 레퍼런스를 읽고 따른다:
+
+- **실시간 화이트보드** — 설명하면서 config의 whiteboard 파일에 mermaid/SVG 포함 상세를 append 해 Obsidian에서 시각적으로 렌더되게 한다. [references/whiteboarding.md](references/whiteboarding.md).
+- **노트 내보내기** — 소주제가 끝나면 화이트보드 블록을 vault의 `대주제/소주제.md` 살아있는 노트로 승격(frontmatter + `[[링크]]`). 대주제 폴더는 config의 `#태그 → 폴더` 매핑으로 자동 결정. [references/whiteboarding.md](references/whiteboarding.md).
+- **시각 자료(SVG/mermaid)** — 그림이 텍스트를 능가할 때만. 구조·흐름은 mermaid, 기하·공간은 `tutor-svg-maker`로 SVG. [references/svg-maker.md](references/svg-maker.md).
+- **지식 그래프 뷰 최신화** — 메모리 knowledge-graph를 config의 그래프 파일에 mermaid로 렌더(source of truth는 메모리). "그래프 최신화" 또는 `/code-tutor end`에. [references/mermaid-maker.md](references/mermaid-maker.md).
+
+이 모든 것에서 **source of truth는 우리 메모리**(learning-state, knowledge-graph)이고 Obsidian 아티팩트는 그 표현(view)이다.
+
 ## init 절차 (`/code-tutor init`)
 
 1. tutor-explorer에게 전체 스캔 요청: 기술 스택, 레이어 구조, 주요 진입점, 디렉토리별 역할
@@ -123,7 +137,8 @@ init 없이 사용 중일 때는 첫 질문 시점에 `.claude/tutor/` 디렉토
 
 1. 이번 세션의 **사건 목록**을 키워드별로 정리한다: 설명 받음 / 예제 봄 / 후속 질문함 / Feynman 통과 / 자기보고 / 발견한 연결. 판단("이해한 듯")이 아니라 실제 일어난 사건만. 이 목록의 근거는 대화 컨텍스트다.
 2. `tutor-scribe` 서브에이전트에 위임: 사건 목록 + 프로젝트 `.claude/tutor/` 경로를 넘겨 learning-state·knowledge-graph·bookmarks·learning-report 일괄 갱신
-3. scribe의 갱신 보고를 확인한 후, 사용자에게 Learning Mode 형식의 요약 출력 (Feynman 체크 포함)
+3. (config 있으면) 아직 노트로 승격 안 된 소주제를 vault에 내보내고, mermaid-maker로 지식 그래프 파일을 최신화한다.
+4. scribe의 갱신 보고를 확인한 후, 사용자에게 Learning Mode 형식의 요약 출력 (Feynman 체크 포함)
 
 ## 금지 사항
 

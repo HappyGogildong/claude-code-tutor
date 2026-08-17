@@ -100,14 +100,26 @@ OrderService(src/service/OrderService.java:42)에서 여러 Repository
 - 디스크에는 durable한 학습 변화만 기록합니다: 주제 전환·연결 발견 시 전역 파일로 flush.
 - 세션 종료 시 학습 리포트가 자동 생성됩니다.
 
+## Obsidian 연동 (선택)
+
+`~/.claude/memory/code-tutor/config.md`에 vault 경로를 설정하면 시각화·화이트보드·노트 내보내기가 켜집니다. (설정이 없으면 조용히 비활성.)
+
+- **실시간 화이트보드** — 설명하면서 `whiteboard.md`에 mermaid/SVG 포함 상세를 실시간 기록해 Obsidian에서 시각적으로 렌더합니다.
+- **노트 내보내기** — 소주제가 끝나면 화이트보드 블록을 `대주제/소주제.md` **살아있는 노트**로 승격합니다(frontmatter + `[[링크]]`). 대주제 폴더는 `#태그 → 폴더` 매핑으로 자동 결정. 노트 간 `[[링크]]`가 Obsidian 네이티브 그래프뷰를 부산물로 만듭니다.
+- **시각 자료** — 그림이 텍스트를 능가할 때만. 구조·흐름은 mermaid, 기하·공간(경사하강법 발산, 벡터장 등)은 `tutor-svg-maker`로 SVG.
+- **지식 그래프 뷰 최신화** — 메모리의 knowledge-graph를 지정 파일에 mermaid로 렌더. **source of truth는 우리 메모리**이고 Obsidian 아티팩트는 그 표현입니다(추후 가중치 속성·HTML 렌더로 확장 가능).
+
+`config.md`와 학습 데이터는 개인 정보라 저장소에 포함되지 않습니다.
+
 ## 아키텍처와 모델 분리
 
-비싼 판단(교육적 설명)과 기계적 작업(탐색·기록)을 모델 급으로 나눕니다.
+비싼 판단(교육적 설명)과 기계적 작업(탐색·기록·생성)을 모델 급으로 나눕니다.
 
 | 역할 | 담당 | 모델 |
 |---|---|---|
 | 튜터 설명 | 메인 대화 (스킬) | 세션 모델 (Fable/Opus 권장) |
 | 무거운 코드 탐색 (3개+ 파일 추적, 전체 스캔) | `tutor-explorer` 서브에이전트 | sonnet |
+| 학습용 SVG 생성 | `tutor-svg-maker` 서브에이전트 | sonnet |
 | 세션 종료 시 일괄 기록 | `tutor-scribe` 서브에이전트 | haiku |
 
 모델은 각 에이전트 파일의 frontmatter `model:` 필드에서 바꿀 수 있습니다.
@@ -174,10 +186,14 @@ Copy-Item agents\tutor-explorer.md, agents\tutor-scribe.md "$env:USERPROFILE\.cl
 skills/code-tutor/
 ├── SKILL.md                       # 진입점: 모드 판별, 워크플로, 서브커맨드
 └── references/
-    ├── modes.md                   # 5개 모드별 상세 응답 포맷
-    └── memory-protocol.md         # 메모리 파일 스키마·갱신 규칙·이해도 전이 기준
+    ├── modes.md                   # 모드별 상세 응답 포맷
+    ├── memory-protocol.md         # 메모리 파일 스키마·갱신 규칙·이해도 전이 기준
+    ├── whiteboarding.md           # 실시간 화이트보드 + 노트 내보내기 스키마
+    ├── mermaid-maker.md           # 지식 그래프 → Obsidian mermaid 뷰 최신화
+    └── svg-maker.md               # 학습용 SVG 시각 자료 판단·생성 가이드
 agents/
 ├── tutor-explorer.md              # 코드 탐색 서브에이전트 (sonnet)
+├── tutor-svg-maker.md             # 학습용 SVG 생성 서브에이전트 (sonnet)
 └── tutor-scribe.md                # 기록 서브에이전트 (haiku)
 ```
 
