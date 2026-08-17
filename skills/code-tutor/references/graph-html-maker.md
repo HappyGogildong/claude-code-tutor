@@ -1,6 +1,8 @@
 # Graph HTML Maker — 인터랙티브 지식 그래프
 
-메모리의 `knowledge-graph.md`(source of truth)를 **자체완결 인터랙티브 HTML**(force-directed, 줌/팬/드래그, 태그 필터)로 렌더해 config의 그래프 파일(`Code tutor graph.html`)에 쓴다. Obsidian 그래프뷰처럼 **한 눈에 보고 확대/축소**할 수 있는 뷰다.
+**노트로 내보낸 항목만** 노드로 하는 **자체완결 인터랙티브 HTML**(force-directed, 줌/팬/드래그, 태그 필터)을 config의 그래프 파일(`Code tutor graph.html`)에 렌더한다. Obsidian 그래프뷰처럼 **한 눈에 보고 확대/축소**할 수 있는 뷰다.
+
+> **뷰는 vault의 내보낸 노트 부분집합만 보여준다.** 메모리의 `knowledge-graph.md`는 여전히 전체 구조의 source of truth지만, 아직 노트로 승격되지 않은 키워드(임베딩·청킹 등)는 그래프 뷰에 넣지 않는다 — 사용자가 "문서로 export된 항목만" 보길 원함.
 
 **활성 조건**: config.md에 그래프 HTML 경로가 있을 때.
 
@@ -14,18 +16,19 @@
 
 렌더러 HTML은 한 번 만들어 두면 재사용한다. **최신화 = 파일 안의 `DATA` 블록만 교체.**
 
-1. `~/.claude/memory/code-tutor/knowledge-graph.md`(노드/엣지)와 `learning-state.md`(이모지·태그)를 읽는다.
-2. 아래 형태의 `DATA` 객체를 만든다:
+1. **내보낸 노트를 스캔한다**: config의 vault `CS정리/<대주제>/*.md`. 각 노트 = 노드 1개. (기존 vault 노트라도 code-tutor frontmatter가 없으면 무시; 노드는 우리가 내보낸 노트만.)
+2. 각 노트의 frontmatter를 읽어 `DATA`를 만든다:
    ```js
    const DATA = {
      updated: "YYYY-MM-DD",
-     nodes: [ {id:"WT", label:"withTransaction", m:"🔵", tags:["Transaction"]}, … ],
-     edges: [ ["CP","PG"], ["PQ","WT"], … ]   // 무방향, id 쌍
+     nodes: [ {id:"RAG", label:"RAG", subject:"AI", tags:["AI","RAG","LLM","Embedding"]}, … ],
+     edges: [ ["RAG","PGV"], ["STRAT","ADPT"], … ]   // 무방향, id 쌍
    };
    ```
-   - `id`: 짧은 고유 키. `label`: 표시명. `m`: 이해도 이모지(learning-state, 허브는 "").
-   - `tags`: learning-state의 `#주제` 태그(# 없이) → 그래프의 태그 필터 칩이 된다.
-   - `edges`: knowledge-graph의 `[[]]` 엣지를 id 쌍으로. 무방향, 한 번씩만.
+   - `id`: 짧은 고유 키. `label`: 노트 `title`(또는 파일명).
+   - `subject`: 노트가 속한 **대주제 폴더** → **노드 색**을 정한다.
+   - `tags`: `subject` + 노트 frontmatter `tags` (# 없이) → 태그 필터 칩. 노드는 다중 태그 가능.
+   - `edges`: 각 노트 frontmatter `related`의 `[[링크]]` 중 **대상도 내보낸 노트인 것만**. 무방향·중복 제거. (노트로 안 뺀 개념으로 향하는 링크는 뷰에서 제외.)
 3. 대상 HTML 파일이 있으면 `/* ==== DATA … ==== */ … /* ==== /DATA ==== */` 사이만 교체한다. 없으면 아래 렌더러로 새로 만든다.
 
 ## 렌더러 요구사항 (파일이 없어 새로 만들 때)
@@ -34,8 +37,8 @@
 
 - **자동 맞춤(필수)**: 로드 시 워밍업(레이아웃 사전 안정화) 후 bounding box를 계산해 전체 그래프가 뷰포트에 들어오도록 scale·offset을 맞춘다. 창 크기가 바뀌거나 'F' 키/"맞춤" 버튼 클릭 시 다시 맞춘다. **이게 없으면 그래프가 화면 밖으로 퍼져 "데이터 없음"처럼 보인다.**
 - **줌**(휠, 커서 기준), **팬**(빈 곳 드래그), **노드 드래그**(고정).
-- 노드 색 = 이해도: 🔴 `#e5534b` / 🟡 `#d9a441` / 🟢 `#3fb950` / 🔵 `#4a9eff` / 허브·미평가 `#8b949e`.
-- 노드 크기 ∝ 연결 차수. 라벨은 이모지+이름.
+- **노드 색 = 대주제(subject)**: 존재하는 subject에 팔레트를 순서대로 배정하고, 범례는 subject로 **동적 생성**. (노트는 여러 키워드를 묶으므로 이해도 이모지 대신 폴더 색으로.)
+- 노드 크기 ∝ 연결 차수. 라벨은 노트 제목.
 - **태그 필터 패널**: 좌상단 제목 밑 햄버거(☰) 버튼으로 접이식 패널 토글. 패널 = 검색창 + "전체 해제" 버튼 + 태그 목록(태그별 노드 수 표시). 태그 **호버 = 임시 강조**(그 태그 노드 + **연결된 이웃 노드**까지 선명, 나머지 dim), **클릭 = 고정 필터**(OR 누적, 재클릭 해제). dim 우선순위: 호버 > 고정 > 없음. 노드는 여러 태그(다중 속성)를 가질 수 있고 필터는 OR로 판정.
 - 상단에 제목, 하단에 범례·조작 힌트.
 - 다크 배경 기준(중립 팔레트). `updated` 표기.
