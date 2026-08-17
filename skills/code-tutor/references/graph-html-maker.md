@@ -1,0 +1,51 @@
+# Graph HTML Maker — 인터랙티브 지식 그래프
+
+메모리의 `knowledge-graph.md`(source of truth)를 **자체완결 인터랙티브 HTML**(force-directed, 줌/팬/드래그, 태그 필터)로 렌더해 config의 그래프 파일(`Code tutor graph.html`)에 쓴다. Obsidian 그래프뷰처럼 **한 눈에 보고 확대/축소**할 수 있는 뷰다.
+
+**활성 조건**: config.md에 그래프 HTML 경로가 있을 때.
+
+## 트리거
+
+- 명시: "그래프 최신화", "지식 그래프 업데이트"
+- 자동: `/code-tutor end`, 또는 knowledge-graph에 노드·엣지가 여러 개 추가된 뒤.
+- 터미널 내 즉시 확인("지식 그래프 보여줘")은 작은 서브그래프를 mermaid로 (mermaid-maker.md). 이건 **전체 그래프 파일**이 목적.
+
+## 절차 (DATA만 교체)
+
+렌더러 HTML은 한 번 만들어 두면 재사용한다. **최신화 = 파일 안의 `DATA` 블록만 교체.**
+
+1. `~/.claude/memory/code-tutor/knowledge-graph.md`(노드/엣지)와 `learning-state.md`(이모지·태그)를 읽는다.
+2. 아래 형태의 `DATA` 객체를 만든다:
+   ```js
+   const DATA = {
+     updated: "YYYY-MM-DD",
+     nodes: [ {id:"WT", label:"withTransaction", m:"🔵", tags:["Transaction"]}, … ],
+     edges: [ ["CP","PG"], ["PQ","WT"], … ]   // 무방향, id 쌍
+   };
+   ```
+   - `id`: 짧은 고유 키. `label`: 표시명. `m`: 이해도 이모지(learning-state, 허브는 "").
+   - `tags`: learning-state의 `#주제` 태그(# 없이) → 그래프의 태그 필터 칩이 된다.
+   - `edges`: knowledge-graph의 `[[]]` 엣지를 id 쌍으로. 무방향, 한 번씩만.
+3. 대상 HTML 파일이 있으면 `/* ==== DATA … ==== */ … /* ==== /DATA ==== */` 사이만 교체한다. 없으면 아래 렌더러로 새로 만든다.
+
+## 렌더러 요구사항 (파일이 없어 새로 만들 때)
+
+자체완결 단일 HTML(외부 CDN 금지, 인터넷 없이 동작). 캔버스 기반 force-directed:
+
+- **줌**(휠, 커서 기준), **팬**(빈 곳 드래그), **노드 드래그**(고정).
+- 노드 색 = 이해도: 🔴 `#e5534b` / 🟡 `#d9a441` / 🟢 `#3fb950` / 🔵 `#4a9eff` / 허브·미평가 `#8b949e`.
+- 노드 크기 ∝ 연결 차수. 라벨은 이모지+이름.
+- **태그 필터 칩**: 클릭으로 해당 태그 노드만 강조, 나머지 dim.
+- 상단에 제목, 하단에 범례·조작 힌트.
+- 다크 배경 기준(중립 팔레트). `updated` 표기.
+
+기준 구현은 현재 배포된 `Code tutor graph.html`를 그대로 참고(같은 구조 유지).
+
+## 보기
+
+브라우저로 파일을 연다(더블클릭). Obsidian 안에서는 HTML이 인라인 렌더되지 않으므로, "브라우저에서 열기"로 안내한다.
+
+## 향후
+
+- **가중치**: knowledge-graph에 엣지 가중치/노드 중요도를 넣으면 `DATA`에 `w` 필드를 추가하고 엣지 두께·노드 크기에 매핑한다 (스키마 확장 지점).
+- **Obsidian 네이티브 그래프뷰**: 노트 내보내기(whiteboarding.md)의 `[[링크]]`로 자연히 생긴다. HTML 그래프는 "우리가 제어하는 고품질 뷰", Obsidian 그래프는 "노트 간 링크 부산물" — 둘은 상호보완.

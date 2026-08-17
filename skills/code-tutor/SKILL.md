@@ -120,10 +120,10 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 
 - **실시간 화이트보드** — 설명하면서 config의 whiteboard 파일에 mermaid/SVG 포함 상세를 append 해 Obsidian에서 시각적으로 렌더되게 한다. [references/whiteboarding.md](references/whiteboarding.md).
 - **노트 내보내기** — 소주제가 끝나면 화이트보드 블록을 vault의 `대주제/소주제.md` 살아있는 노트로 승격(frontmatter + `[[링크]]`). 대주제 폴더는 config의 `#태그 → 폴더` 매핑으로 자동 결정. [references/whiteboarding.md](references/whiteboarding.md).
-- **시각 자료(SVG/mermaid)** — 그림이 텍스트를 능가할 때만. 구조·흐름은 mermaid, 기하·공간은 `tutor-svg-maker`로 SVG. [references/svg-maker.md](references/svg-maker.md).
-- **지식 그래프 뷰 최신화** — 메모리 knowledge-graph를 config의 그래프 파일에 mermaid로 렌더(source of truth는 메모리). "그래프 최신화" 또는 `/code-tutor end`에. [references/mermaid-maker.md](references/mermaid-maker.md).
+- **시각 자료(SVG/mermaid)** — 그림이 텍스트를 능가할 때만. 구조·흐름은 mermaid([references/mermaid-maker.md](references/mermaid-maker.md)), 기하·공간은 `tutor-svg-maker`로 SVG([references/svg-maker.md](references/svg-maker.md)).
+- **지식 그래프 뷰 최신화** — 메모리 knowledge-graph를 config의 그래프 파일에 **인터랙티브 HTML**(줌/팬/드래그)로 렌더. "그래프 최신화" 또는 `/code-tutor end`에. [references/graph-html-maker.md](references/graph-html-maker.md). (터미널 내 빠른 확인은 작은 서브그래프를 mermaid로.)
 
-이 모든 것에서 **source of truth는 우리 메모리**(learning-state, knowledge-graph)이고 Obsidian 아티팩트는 그 표현(view)이다.
+이 모든 것에서 **source of truth는 우리 메모리**(learning-state, knowledge-graph)이고 Obsidian 아티팩트는 그 표현(view)이다. 노트에 다는 출처는 config.md의 신뢰 출처(MDN·공식 docs·Baeldung 등)에서 확인 가능한 것만 — **URL을 지어내지 않는다.**
 
 ## init 절차 (`/code-tutor init`)
 
@@ -137,7 +137,7 @@ init 없이 사용 중일 때는 첫 질문 시점에 `.claude/tutor/` 디렉토
 
 1. 이번 세션의 **사건 목록**을 키워드별로 정리한다: 설명 받음 / 예제 봄 / 후속 질문함 / Feynman 통과 / 자기보고 / 발견한 연결. 판단("이해한 듯")이 아니라 실제 일어난 사건만. 이 목록의 근거는 대화 컨텍스트다.
 2. `tutor-scribe` 서브에이전트에 위임: 사건 목록 + 프로젝트 `.claude/tutor/` 경로를 넘겨 learning-state·knowledge-graph·bookmarks·learning-report 일괄 갱신
-3. (config 있으면) 아직 노트로 승격 안 된 소주제를 vault에 내보내고, mermaid-maker로 지식 그래프 파일을 최신화한다.
+3. (config 있으면) 아직 노트로 승격 안 된 소주제를 vault에 내보내고(신뢰 출처 포함), graph-html-maker로 지식 그래프 HTML을 최신화한다.
 4. scribe의 갱신 보고를 확인한 후, 사용자에게 Learning Mode 형식의 요약 출력 (Feynman 체크 포함)
 
 ## 금지 사항
@@ -145,3 +145,4 @@ init 없이 사용 중일 때는 첫 질문 시점에 `.claude/tutor/` 디렉토
 - 코드를 고치라는 요청이 아닌 한 코드를 수정하지 않는다 (읽기 전용 학습 도구)
 - 추측으로 설명하지 않는다 — 코드를 읽고 확인한 사실만
 - 고립된 설명 금지 — 항상 프로젝트 내 위치(레이어, 호출 흐름)와 함께 설명한다
+- 출처 URL을 지어내지 않는다 — 신뢰 출처에서 실제 확인 가능한 링크만, 불확실하면 검색 힌트로 대체

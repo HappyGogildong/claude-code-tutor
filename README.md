@@ -105,9 +105,9 @@ OrderService(src/service/OrderService.java:42)에서 여러 Repository
 `~/.claude/memory/code-tutor/config.md`에 vault 경로를 설정하면 시각화·화이트보드·노트 내보내기가 켜집니다. (설정이 없으면 조용히 비활성.)
 
 - **실시간 화이트보드** — 설명하면서 `whiteboard.md`에 mermaid/SVG 포함 상세를 실시간 기록해 Obsidian에서 시각적으로 렌더합니다.
-- **노트 내보내기** — 소주제가 끝나면 화이트보드 블록을 `대주제/소주제.md` **살아있는 노트**로 승격합니다(frontmatter + `[[링크]]`). 대주제 폴더는 `#태그 → 폴더` 매핑으로 자동 결정. 노트 간 `[[링크]]`가 Obsidian 네이티브 그래프뷰를 부산물로 만듭니다.
+- **노트 내보내기** — 소주제가 끝나면 화이트보드 블록을 `대주제/소주제.md` **살아있는 노트**로 승격합니다(frontmatter + `[[링크]]` + **신뢰 출처 URL**). 대주제 폴더는 `#태그 → 폴더` 매핑으로 자동 결정. 노트 간 `[[링크]]`가 Obsidian 네이티브 그래프뷰를 부산물로 만듭니다. 출처는 MDN·공식 docs·Baeldung 등 실제 확인 가능한 것만 답니다(URL을 지어내지 않음).
 - **시각 자료** — 그림이 텍스트를 능가할 때만. 구조·흐름은 mermaid, 기하·공간(경사하강법 발산, 벡터장 등)은 `tutor-svg-maker`로 SVG.
-- **지식 그래프 뷰 최신화** — 메모리의 knowledge-graph를 지정 파일에 mermaid로 렌더. **source of truth는 우리 메모리**이고 Obsidian 아티팩트는 그 표현입니다(추후 가중치 속성·HTML 렌더로 확장 가능).
+- **인터랙티브 지식 그래프** — 메모리의 knowledge-graph를 **자체완결 HTML**(force-directed, 줌/팬/드래그, 태그 필터, 이해도 색상)로 렌더해 브라우저에서 한 눈에 탐색합니다. **source of truth는 우리 메모리**이고, 추후 가중치 속성을 넣어 엣지 두께·노드 크기로 확장 가능합니다(옵시디언보다 제어 폭이 넓은 뷰).
 
 `config.md`와 학습 데이터는 개인 정보라 저장소에 포함되지 않습니다.
 
@@ -188,8 +188,9 @@ skills/code-tutor/
 └── references/
     ├── modes.md                   # 모드별 상세 응답 포맷
     ├── memory-protocol.md         # 메모리 파일 스키마·갱신 규칙·이해도 전이 기준
-    ├── whiteboarding.md           # 실시간 화이트보드 + 노트 내보내기 스키마
-    ├── mermaid-maker.md           # 지식 그래프 → Obsidian mermaid 뷰 최신화
+    ├── whiteboarding.md           # 실시간 화이트보드 + 노트 내보내기 스키마(출처 포함)
+    ├── graph-html-maker.md        # 지식 그래프 → 인터랙티브 HTML(줌/팬) 렌더
+    ├── mermaid-maker.md           # 인라인 mermaid 다이어그램(소규모)
     └── svg-maker.md               # 학습용 SVG 시각 자료 판단·생성 가이드
 agents/
 ├── tutor-explorer.md              # 코드 탐색 서브에이전트 (sonnet)

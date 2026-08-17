@@ -53,7 +53,10 @@ keywords:                       # 이 노트가 담은 learning-state 키워드 
 related:                        # knowledge-graph 엣지 → 위키링크(네이티브 그래프 생성)
   - "[[Optional]]"
   - "[[Collectors]]"
-source: "aac/hub · src/service/OrderService.java:42"
+source: "aac/hub · src/service/OrderService.java:42"   # 코드 출처(어디서 나왔나)
+sources:                        # 신뢰 가능한 외부 문서(검증용) — config.md의 신뢰 출처
+  - "MDN: https://developer.mozilla.org/…/Array/reduce"
+  - "Java SE Docs: java.util.stream.Stream"
 created: 2026-08-17
 updated: 2026-08-17
 ---
@@ -75,6 +78,10 @@ updated: 2026-08-17
 - [[Optional]] — 종료 연산이 빈 값일 수 있어 함께 등장
 - [[Collectors]] — collect의 인자
 
+## 출처
+- [MDN — Array.prototype.reduce](https://developer.mozilla.org/…)
+- Java SE Docs — `java.util.stream.Stream` (docs.oracle.com에서 확인)
+
 ## 이해도 체크
 - [ ] Stream.collect를 한 문장으로 설명해보기
 ```
@@ -83,6 +90,7 @@ updated: 2026-08-17
 
 - `related`/`## 연결`의 `[[링크]]`는 **knowledge-graph.md의 엣지와 1:1로 대응**시킨다. 노트끼리 링크가 생기므로 Obsidian 네이티브 그래프뷰가 부산물로 만들어진다.
 - `tags`/`keywords`는 learning-state와 동기화 — 노트는 표현(view)이고 **source of truth는 우리 메모리**다. 충돌 시 메모리가 우선.
+- **`sources`(신뢰 출처)**: config.md의 신뢰 출처 표에서 확인 가능한 링크를 단다. 공식 문서 우선. **정확한 URL이 불확실하면 지어내지 말고** 검색 힌트로 대체한다 (예: "MDN에서 'reduce' 검색"). 코드 출처(`source`)와 외부 문서 출처(`sources`)는 별개다.
 - 향후 가중치를 넣으면 frontmatter에 `weights:` 한 필드만 추가한다 (스키마 확장 지점).
 - 기존 vault 노트 스타일(자유형식 `##` + 코드블록 + 출처 링크)과 이질감 없게. frontmatter만 추가 가치.
 
