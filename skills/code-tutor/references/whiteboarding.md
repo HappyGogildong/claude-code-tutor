@@ -88,7 +88,7 @@ updated: 2026-08-17
 
 ### 규칙
 
-- `related`/`## 연결`의 `[[링크]]`는 **knowledge-graph.md의 엣지와 1:1로 대응**시킨다. 노트끼리 링크가 생기므로 Obsidian 네이티브 그래프뷰가 부산물로 만들어진다.
+- `related`/`## 연결`의 `[[링크]]`는 **knowledge-graph.md의 엣지와 1:1로 대응**시킨다. 노트끼리 링크가 생기므로 Obsidian 네이티브 그래프뷰가 부산물로 만들어진다. **엣지 원칙은 memory-protocol.md와 동일** — 실제 개념 관계만, co-occurrence 금지, 간접 관계를 직접 잇지 않음. (`related`가 그래프 뷰의 엣지가 되므로 여기에 근거 없는 링크를 넣으면 개념도가 오염된다.)
 - `tags`/`keywords`는 learning-state와 동기화 — 노트는 표현(view)이고 **source of truth는 우리 메모리**다. 충돌 시 메모리가 우선.
 - **`sources`(신뢰 출처)**: config.md의 신뢰 출처 표에서 확인 가능한 링크를 단다. 공식 문서 우선. **정확한 URL이 불확실하면 지어내지 말고** 검색 힌트로 대체한다 (예: "MDN에서 'reduce' 검색"). 코드 출처(`source`)와 외부 문서 출처(`sources`)는 별개다.
 - 향후 가중치를 넣으면 frontmatter에 `weights:` 한 필드만 추가한다 (스키마 확장 지점).
