@@ -22,15 +22,19 @@
 
 매 턴 파일을 쓰지 않는다. 전역 파일은 주제 전환·연결 발견 시에만 flush 하므로, 컨텍스트 압축 손실 창은 "직전 주제 하나"로 제한된다.
 
-## 항목 단위: 키워드
+## 항목 단위: 키워드 (+ 주제 태그)
 
-learning-state의 항목은 **한 번의 설명으로 온전히 다룰 수 있는 최소 키워드**다.
+learning-state의 항목(=이해도 점수를 매기는 노드)은 **한 번의 설명으로 온전히 다룰 수 있는 최소 키워드**다. 큰 주제는 점수 노드가 될 수 없다 — 어디까지 이해했는지 특정할 수 없기 때문이다. 대신 **주제 태그**와 **그래프 허브 노드**로 큰 주제를 붙잡는다.
 
-- 좋은 항목: `@Transactional propagation`, `Isolation Level`, `pool.query vs pool.connect`, `Dirty Read`
-- 금지 항목: `Transaction`, `Connection Pool`, `Spring` 같은 큰 주제 — 어디까지 이해했는지 특정할 수 없다
-- 큰 주제는 knowledge-graph.md의 트리 루트/중간 노드로만 존재한다.
-- **큰 주제의 진척도는 저장하지 않는다.** 대화로 큰 개념의 이해도를 판정하는 것은 오류 소지가 크다. Learning Mode에서 knowledge-graph의 하위 키워드 이해도를 집계해 파생적으로만 보여준다 (예: `Transaction: 하위 키워드 7개 중 🟡 3, 🟢 1`).
-- 설명 중 큰 주제를 다뤘다면, 실제로 설명한 하위 키워드들로 쪼개서 등록한다.
+- 좋은 항목: `@Transactional propagation`, `Isolation Level`, `pool.query vs pool.connect`
+- 점수 금지: `Transaction`, `Connection Pool`, `Spring` 같은 큰 주제를 **하나의 이해도 항목으로** 등록하지 않는다.
+
+큰 주제를 붙잡는 두 방법 (작은 단위의 정밀함은 유지하면서):
+
+1. **주제 태그** — 각 항목 끝에 `#큰주제`를 붙인다: `@Transactional propagation 🟡 (2026-07-15) #Transaction`. 여러 개 가능: `#Transaction #Spring`. 태그는 Obsidian tag와 호환되고 grep으로 필터된다.
+2. **그래프 허브 노드** — knowledge-graph.md에서 `Transaction`을 하나의 노드로 두고, 하위 키워드들을 [[링크]]로 잇는다.
+
+→ 이렇게 하면 `#Transaction`으로 필터해 **큰 주제 단위의 진척을 집계**할 수 있다 (Learning 모드 "주제별 진척": 태그로 묶어 이모지 카운트). 큰 주제 자체의 진척도를 하나의 값으로 *저장하지는* 않는다 — 항상 하위 항목에서 파생 집계한다.
 
 ## 이해도 전이 기준
 
@@ -59,50 +63,60 @@ learning-state의 항목은 **한 번의 설명으로 온전히 다룰 수 있�
 # Learning State
 
 > 🔴 등장만 함 → 🟡 설명 받음 → 🟢 예제·적용 확인 → 🔵 검증됨(Feynman)
-> 항목은 최소 키워드 단위. 큰 주제(Transaction, Connection Pool 등)는 등록 금지 — knowledge-graph에만.
+> 항목은 최소 키워드 단위 + 주제 태그(#큰주제). 큰 주제 자체는 점수 노드로 등록 금지.
 
 ## Language
-<!-- 예: Optional.orElseThrow, Stream.collect, ESM export/import -->
+<!-- 예: - ESM export/import 🟢 (2026-07-14) #ESM -->
 
 ## Framework
-<!-- 예: @Transactional propagation, useEffect 의존성 배열 -->
+<!-- 예: - @Transactional propagation 🟡 (2026-07-15) #Transaction #Spring -->
 
 ## CS
-<!-- 예: Isolation Level, B+Tree 리프 노드, TCP handshake -->
+<!-- 예: - Isolation Level 🟡 (2026-07-15) #Transaction -->
 
 ## Library
-<!-- 예: pool.query vs pool.connect, axios interceptor -->
+<!-- 예: - pool.query vs pool.connect 🟢 (2026-07-15) #ConnectionPool -->
 
 ## Pattern
-<!-- 예: Repository Pattern의 인터페이스 분리, DTO 변환 위치 -->
+<!-- 예: - withTransaction 콜백 패턴 🔵 (2026-07-15) #Transaction -->
 ```
 
-항목 형식: `- <키워드> <이모지> (YYYY-MM-DD)` — 한 줄, 설명 없이.
+항목 형식: `- <키워드> <이모지> (YYYY-MM-DD) #<주제> [#<주제2> …]` — 한 줄, 설명 없이.
+- **주제 태그**는 큰 주제(집계 단위)를 가리킨다. 최소 1개, 여러 개 가능. Obsidian tag·grep과 호환.
+- 카테고리 섹션(Language/…)은 "지식의 종류", 태그는 "주제 클러스터" — 서로 직교하므로 둘 다 쓴다.
 
 ### knowledge-graph.md (전역)
 
-**이것은 선수지식 트리가 아니라 연상 그래프(associative graph)다.** "무엇을 알아야 이걸 이해하나"의 하향식 분해가 아니라, **"내가 실제로 만진 것들이 어떻게 서로 닿는가"를 아래에서 위로 축적**한 것이다. 코딩 학습은 흩어진 섬이므로, 이 그래프의 가치는 그 섬들을 잇는 데 있다.
+**선수지식 트리가 아니라 노드+엣지 그래프(associative graph)다.** "무엇을 알아야 이걸 이해하나"의 하향식 분해가 아니라, **"내가 실제로 만진 것들이 어떻게 서로 닿는가"를 축적**한 것이다. 아무 노드끼리나 교차 연결되며, 큰 주제(허브)와 작은 키워드가 같은 그래프에 공존한다.
 
-트리 형태로 적되 엣지는 선수관계가 아니라 **개념적 인접**을 뜻한다. 특히 **인스턴스→패턴** 링크를 적극적으로 만든다: "이 코드는 패턴 P의 사례다 → P가 내가 배운 어디에 또 나오나".
+형식 — **노드 중심 인접 목록**:
+- 각 노드는 `## 노드명` 헤딩.
+- 그 아래 `- [[대상노드]] — 근거` 불릿으로 엣지. 엣지 = **개념적 인접**(선수관계 아님).
+- 엣지는 **무방향**: 한 번만 적는다(백링크는 암묵). A 아래 `[[B]]`를 적었으면 B 아래 `[[A]]`를 또 적지 않는다.
+- `[[위키링크]]` 표기로 Obsidian tag/링크와 호환. 개념 이름만, 프로젝트 파일 경로 금지.
 
 ```markdown
 # Knowledge Graph
 
-<!-- 연상 그래프: 실제로 만진 개념들이 어떻게 닿는가. 개념 이름만, 프로젝트 파일 경로 금지.
-     엣지 = 개념적 인접(선수관계 아님). 인스턴스→패턴 링크를 적극 추가. -->
+<!-- 노드+엣지 그래프. ## 노드 아래 - [[대상]] — 근거. 무방향(한 번만). 허브도 노드.
+     보기: 튜터에게 "지식 그래프 보여줘" → mermaid 렌더. Obsidian에서 폴더 열면 [[링크]] 인식. -->
 
-## Database
-Connection Pool
-├── pool.query vs pool.connect
-│   └── (연결) withTransaction 콜백 패턴 — 같은 커넥션 보장이라는 같은 문제
-└── Transaction
-    ├── Isolation Level
-    └── MVCC
+## Connection Pool
+- [[pool.query vs pool.connect]]
+- [[Transaction]] — 트랜잭션은 같은 커넥션을 요구
+
+## pool.query vs pool.connect
+- [[withTransaction 콜백 패턴]] — 같은 커넥션 보장이라는 같은 문제 (교차 연결)
+
+## Transaction
+- [[Isolation Level]]
+- [[MVCC]]
 ```
 
-- 새 개념은 실제로 닿는 기존 노드에 엣지로 붙인다. 어디에도 안 닿으면 새 루트(새 섬)로 둔다.
-- 세션·프로젝트를 넘어 닿으면 그 엣지를 반드시 추가한다 — 이것이 섬을 잇는 핵심 작업.
-- `(연결)` 주석처럼 왜 닿는지 한 줄 근거를 남기면 나중에 소급 상기(spaced resurfacing)에 쓸 수 있다.
+- 새 개념은 실제로 닿는 기존 노드에 `[[]]` 엣지로 잇는다. 어디에도 안 닿으면 새 노드(새 섬)로 둔다.
+- **허브 노드**: 큰 주제(`Transaction`, `Connection Pool`)를 노드로 두고 하위 키워드를 잇는다. learning-state의 `#주제` 태그와 이름을 맞춘다.
+- 세션·프로젝트를 넘어 닿으면 반드시 엣지를 추가한다 — 섬을 잇는 핵심 작업. `— 근거` 한 줄이 나중 소급 상기(resurfacing)에 쓰인다.
+- **인스턴스→패턴** 링크를 적극 추가: "이 코드는 패턴 P의 사례 → P가 내가 배운 어디에 또 나오나".
 
 ### bookmarks.md (전역)
 

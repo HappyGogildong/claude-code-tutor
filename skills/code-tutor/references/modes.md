@@ -170,8 +170,8 @@ A → B → C → D  (이번 세션 대화에서 다룬 흐름)
 <🔴/🟡에 머문 키워드 — 왜 중요한지 한 줄씩>
 
 **주제별 진척** ← "내 수준" 질문일 때
-<큰 주제는 저장된 값이 아니라 knowledge-graph 하위 키워드 집계로 표시>
-예: Transaction — 하위 키워드 7개 중 🟡 3, 🟢 1, 미학습 3
+<큰 주제는 저장된 값이 아니라 learning-state의 `#주제` 태그로 필터해 이모지 집계>
+예: #Transaction — 태그된 키워드 7개 중 🟡 3, 🟢 1, 🔵 0, 미학습 3
 
 **흩어진 섬 잇기**   ← 있을 때만
 <과거에 배웠지만 연결 안 된 키워드가 오늘 주제와 닿으면 소급 상기>
@@ -205,3 +205,22 @@ A → B → C → D  (이번 세션 대화에서 다룬 흐름)
 - 통과하면 유지 또는 🔵 승급. 어느 쪽이든 왜 그렇게 판정했는지 한 줄로 알려준다.
 
 이 캘리브레이션은 Learning 모드 전용이 아니라 Quick/Expand/Deep Dive 세션 중에도 위 트리거가 걸리면 자연스럽게 삽입한다.
+
+### 지식 그래프 시각 확인 (mermaid 렌더)
+
+"지식 그래프 보여줘", "그래프", "내 지식 그래프", "#Transaction 그래프" 요청 시, knowledge-graph.md를 읽어 **해당 주변 서브그래프를 mermaid로 렌더**한다.
+
+- 범위: 특정 주제/노드를 지목하면 그 노드에서 1~2홉 이내, 없으면 최근 학습한 섬 위주. 노드가 많으면 잘라서 핵심만.
+- 각 노드에 learning-state 이모지를 붙여 진척을 함께 보인다.
+- `[[]]` 엣지를 mermaid `A --- B`(무방향)로 변환, 근거가 있으면 엣지 라벨로.
+
+```mermaid
+graph LR
+  CP[Connection Pool] --- PQ["pool.query vs connect 🟢"]
+  PQ --- WT["withTransaction 🔵"]
+  CP --- TX[Transaction]
+  TX --- ISO["Isolation Level 🟡"]
+  TX --- MV["MVCC 🟡"]
+```
+
+- 이것이 그래프의 주 확인 경로다. (Obsidian에서 memory 폴더를 열어 그래프뷰로 보는 것도 가능하지만, 튜터 내 mermaid 렌더가 즉시 확인 수단이다.)
