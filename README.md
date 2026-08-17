@@ -68,7 +68,7 @@ OrderService(src/service/OrderService.java:42)에서 여러 Repository
 그래서 Code Tutor의 무게중심은 *사전 계획(선수지식 분해)*이 아니라 **질문이 오는 순간의 소급 연결**에 있습니다:
 
 - **연결 우선(Connection-first)** — 새 개념이 나오면 설명 전에 과거 학습에서 실제 연관 항목을 찾아 맨 앞에 짚습니다: "이건 지난번 `withTransaction`에서 만난 문제의 다른 얼굴입니다." (억지 연결은 하지 않습니다.)
-- **knowledge-graph = 노드+엣지 그래프** — 선수지식 트리가 아니라, Obsidian 노트 연결처럼 `[[위키링크]]`로 아무 개념끼리나 잇는 그래프. 세션·프로젝트를 넘어 연결됩니다. "지식 그래프 보여줘"라고 하면 **mermaid로 렌더**해 시각 확인하고, memory 폴더를 Obsidian으로 열어 그래프뷰로 볼 수도 있습니다.
+- **개념 그래프 = 내보낸 노트** — 노드 인벤토리는 learning-state(키워드·`#태그`), 개념 관계(엣지)는 노트의 `related` `[[위키링크]]`. 별도 그래프 파일은 없습니다. 노트끼리 링크가 곧 개념도이며, HTML 그래프 뷰와 Obsidian 네이티브 그래프뷰가 여기서 만들어집니다. 엣지는 **순수 개념 관계만**(코드베이스 구현 링크·co-occurrence 제외).
 - **간격 기반 연상 재출현** — 섬이 잊히기 전에, 오늘 주제와 닿는 과거 키워드를 소급해 끌어옵니다.
 - **Probe/Plan은 opt-in** — 사전 진단·경로 계획은 "이 주제를 제대로 배우고 싶다"고 명시할 때만. 그 외 일반 질문에는 강요하지 않습니다.
 
@@ -97,7 +97,7 @@ OrderService(src/service/OrderService.java:42)에서 여러 Repository
 
 | 위치 | 내용 | 파일 |
 |---|---|---|
-| `~/.claude/memory/code-tutor/` | 프로젝트가 바뀌어도 재사용되는 지식 (CS·프레임워크·언어 문법·라이브러리·패턴) | learning-state.md, knowledge-graph.md, bookmarks.md |
+| `~/.claude/memory/code-tutor/` | 프로젝트가 바뀌어도 재사용되는 지식 (CS·프레임워크·언어 문법·라이브러리·패턴) | learning-state.md, bookmarks.md |
 | `<프로젝트>/.claude/tutor/` | 이 코드베이스 고유 정보 | learning-report.md, codebase-index.md |
 
 새 프로젝트에서도 이미 🟢 이상인 개념은 짧게 넘어가고, 모르는 것 위주로 설명합니다.
@@ -115,7 +115,7 @@ OrderService(src/service/OrderService.java:42)에서 여러 Repository
 - **실시간 화이트보드** — 설명하면서 `whiteboard.md`에 mermaid/SVG 포함 상세를 실시간 기록해 Obsidian에서 시각적으로 렌더합니다.
 - **노트 내보내기** — 소주제가 끝나면 화이트보드 블록을 `대주제/소주제.md` **살아있는 노트**로 승격합니다(frontmatter + `[[링크]]` + **신뢰 출처 URL**). 대주제 폴더는 `#태그 → 폴더` 매핑으로 자동 결정. 노트 간 `[[링크]]`가 Obsidian 네이티브 그래프뷰를 부산물로 만듭니다. 출처는 MDN·공식 docs·Baeldung 등 실제 확인 가능한 것만 답니다(URL을 지어내지 않음).
 - **시각 자료** — 그림이 텍스트를 능가할 때만. 구조·흐름은 mermaid, 기하·공간(경사하강법 발산, 벡터장 등)은 `tutor-svg-maker`로 SVG.
-- **인터랙티브 지식 그래프** — 메모리의 knowledge-graph를 **자체완결 HTML**(force-directed, 줌/팬/드래그, 태그 필터, 이해도 색상)로 렌더해 브라우저에서 한 눈에 탐색합니다. **source of truth는 우리 메모리**이고, 추후 가중치 속성을 넣어 엣지 두께·노드 크기로 확장 가능합니다(옵시디언보다 제어 폭이 넓은 뷰).
+- **인터랙티브 지식 그래프** — 내보낸 노트를 **자체완결 HTML**(force-directed, 줌/팬/드래그, 태그 필터, 대주제 색상)로 렌더해 브라우저에서 한 눈에 탐색합니다. 노드=노트, 엣지=노트 `related`. 추후 가중치 속성을 넣어 엣지 두께·노드 크기로 확장 가능합니다(옵시디언보다 제어 폭이 넓은 뷰).
 
 `config.md`와 학습 데이터는 개인 정보라 저장소에 포함되지 않습니다.
 

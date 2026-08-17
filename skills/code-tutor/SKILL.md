@@ -14,17 +14,17 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 
 물리·수학은 선수지식 사슬을 아래에서 위로 타고 올라가는 bottom-up 학습이지만, **코딩 학습은 눈앞의 코드에 부딪혀 그때그때 묻는 방식**이다. 질문은 커리큘럼이 아니라 코드베이스 표면에서 촉발되고, 오늘 배운 것이 지난 세션과 트리로 이어져 있지 않은 **흩어진 섬**들이다.
 
-그래서 이 튜터의 최적화 무게중심은 *사전 계획(선수지식 분해)*이 아니라 **질문이 오는 순간의 소급 연결(retroactive connection)**에 있다. knowledge-graph는 "무엇을 알아야 이걸 이해하나"의 선수지식 트리가 아니라 **"내가 실제로 만진 것들이 어떻게 서로 닿는가"의 노드+엣지 그래프**다 (Obsidian식 `[[위키링크]]` 연결, 아무 노드끼리나 교차 연결). "지식 그래프 보여줘" 요청 시 mermaid로 렌더해 시각 확인한다.
+그래서 이 튜터의 최적화 무게중심은 *사전 계획(선수지식 분해)*이 아니라 **질문이 오는 순간의 소급 연결(retroactive connection)**에 있다. 개념 그래프는 별도 파일이 아니라 **learning-state(키워드 노드 + `#태그` 클러스터) + 내보낸 노트의 `related` 엣지**로 이뤄진다 — 순수 개념 관계만(코드베이스 구현·co-occurrence 제외). "지식 그래프 보여줘" 요청 시 노트에서 mermaid로 렌더해 시각 확인한다.
 
 ### 연결 우선(Connection-first) — 코드베이스 스코프에서
 
-**코드베이스형 질문**(이 프로젝트의 코드·결정을 물음)에서, 설명하기 전에 **learning-state·knowledge-graph에서 실제로 연관된 기존 학습 항목을 찾는다.** 진짜 연결이 있으면 응답 첫머리에 그것부터 짚는다:
+**코드베이스형 질문**(이 프로젝트의 코드·결정을 물음)에서, 설명하기 전에 **learning-state(키워드·`#태그`)와 내보낸 노트에서 실제로 연관된 기존 학습 항목을 찾는다.** 진짜 연결이 있으면 응답 첫머리에 그것부터 짚는다:
 
 > "이건 지난번 `withTransaction`에서 만난 문제의 다른 얼굴입니다 — …"
 
 - 억지 연결 금지. 실제 개념적 관련이 있을 때만. **같은 세션에 함께 나왔다는 이유(co-occurrence)만으로 잇지 않는다** — 개념도 원칙 (엣지 규칙은 memory-protocol.md). 없으면 이 항목을 생략한다.
-- 연결은 프로젝트·세션을 넘나든다 (전역 knowledge-graph 기반).
-- 답변에서 "이 코드는 예전에 본 패턴 P의 사례"라고 **말로 잇는 것**(교육적 연결)은 좋다. 그러나 그것을 knowledge-graph **엣지로 기록하지는 않는다** — 개념도는 순수 개념 관계만(코드베이스 구현 링크 제외, memory-protocol.md). 개념도에 넣을 엣지는 개념끼리 실제로 닿을 때만 `[[]]`로, 근거와 함께. 큰 주제는 허브 노드로 두고 learning-state의 `#주제` 태그와 이름을 맞춘다.
+- 연결은 프로젝트·세션을 넘나든다 (전역 learning-state 태그 + 노트 기반).
+- 답변에서 "이 코드는 예전에 본 패턴 P의 사례"라고 **말로 잇는 것**(교육적 연결)은 좋다. 그러나 그것을 개념 그래프 **엣지로 기록하지는 않는다** — 개념도는 순수 개념 관계만(코드베이스 구현 링크 제외, memory-protocol.md). 개념도 엣지(노트 `related`)는 개념끼리 실제로 닿을 때만 `[[]]`로, 근거와 함께.
 
 이것이 이 도메인의 핵심 처방이다 — 흩어진 섬을 매 질문마다 실시간으로 잇는다.
 
@@ -61,7 +61,7 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 
 세션에서 이 스킬이 처음 발동될 때 한 번만 수행한다:
 
-1. 전역 학습 상태 읽기: `~/.claude/memory/code-tutor/learning-state.md`, `knowledge-graph.md`
+1. 전역 학습 상태 읽기: `~/.claude/memory/code-tutor/learning-state.md` (키워드·이해도·`#주제` 태그). 개념 관계는 내보낸 노트의 `related`에 있으므로 별도 그래프 파일은 없다.
    - 파일이 없으면 references/memory-protocol.md의 템플릿으로 생성
 2. 프로젝트 인덱스 읽기: `<프로젝트>/.claude/tutor/codebase-index.md` — **있으면** 읽고, 없어도 정상 진행 (init 강요 금지)
 3. Obsidian 연동 설정 읽기: `~/.claude/memory/code-tutor/config.md` — **있으면** 시각화·화이트보드·노트 내보내기 활성화(아래 "시각화·화이트보드" 참조), 있으면 화이트보드 파일을 새 세션 헤더로 초기화. 없으면 해당 기능 비활성.
@@ -102,8 +102,8 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 
 세션의 탐색 흐름·"③" 목록·"돌아가자" 복귀 지점은 **대화 컨텍스트가 이미 보유**하므로 매 턴 파일에 기록하지 않는다(중복 제거). 대신 durable한 학습 변화만 아래 시점에 전역 파일로 flush 한다:
 
-- **주제 전환 시 (flush 지점)**: learning-state.md에 새 키워드 등록·이해도 전이, knowledge-graph.md에 `[[]]` 엣지 추가. **항목은 최소 키워드 단위 + `#주제` 태그**(큰 주제는 점수 노드 금지, 태그·허브 노드로 붙잡음), 전이는 관찰 가능한 사건으로만 (기준은 memory-protocol.md). 컨텍스트 압축으로 인한 손실 창은 "직전 주제 하나"로 제한된다.
-- **연결 발견 시**: 새 개념이 기존 학습 항목과 실제로 닿으면 knowledge-graph에 엣지를 추가한다 (Connection-first).
+- **주제 전환 시 (flush 지점)**: learning-state.md에 새 키워드 등록·이해도 전이(**최소 키워드 단위 + `#주제` 태그**; 큰 주제는 점수 노드 금지, 태그로 묶음), 전이는 관찰 가능한 사건으로만 (기준은 memory-protocol.md). 개념 관계 엣지는 별도 파일이 아니라 **노트 `related`**에 담긴다. 컨텍스트 압축 손실 창은 "직전 주제 하나".
+- **연결 발견 시**: 두 개념이 실제로 닿고 노트로 승격돼 있으면 노트 `related`에 엣지를 추가한다 (개념도 원칙: 순수 개념·근거 필수·co-occurrence 금지).
 - **주기적 캘리브레이션**: 한 갈래에서 🟢가 3~4개 쌓이거나 큰 주제를 넘어가기 직전, 방금 다룬 키워드 1개를 짧게 검증한다. 틀리면 한 단계 강등해 learning-state를 정직하게 유지한다 (자기기만 방지, 상세는 modes.md).
 - **`/code-tutor end`**: learning-state 일괄 갱신, learning-report.md에 세션 리포트 append, 북마크 정리
 
@@ -136,9 +136,9 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 - **실시간 화이트보드** — 설명하면서 config의 whiteboard 파일에 mermaid/SVG 포함 상세를 append 해 Obsidian에서 시각적으로 렌더되게 한다. [references/whiteboarding.md](references/whiteboarding.md).
 - **노트 내보내기** — 소주제가 끝나면 화이트보드 블록을 vault의 `대주제/소주제.md` 살아있는 노트로 승격(frontmatter + `[[링크]]`). 대주제 폴더는 config의 `#태그 → 폴더` 매핑으로 자동 결정. [references/whiteboarding.md](references/whiteboarding.md).
 - **시각 자료(SVG/mermaid)** — 그림이 텍스트를 능가할 때만. 구조·흐름은 mermaid([references/mermaid-maker.md](references/mermaid-maker.md)), 기하·공간은 `tutor-svg-maker`로 SVG([references/svg-maker.md](references/svg-maker.md)).
-- **지식 그래프 뷰 최신화** — 메모리 knowledge-graph를 config의 그래프 파일에 **인터랙티브 HTML**(줌/팬/드래그)로 렌더. "그래프 최신화" 또는 `/code-tutor end`에. [references/graph-html-maker.md](references/graph-html-maker.md). (터미널 내 빠른 확인은 작은 서브그래프를 mermaid로.)
+- **지식 그래프 뷰 최신화** — 내보낸 노트를 config의 그래프 파일에 **인터랙티브 HTML**(줌/팬/드래그)로 렌더. "그래프 최신화" 또는 `/code-tutor end`에. [references/graph-html-maker.md](references/graph-html-maker.md). (터미널 내 빠른 확인은 작은 서브그래프를 mermaid로.)
 
-이 모든 것에서 **source of truth는 우리 메모리**(learning-state, knowledge-graph)이고 Obsidian 아티팩트는 그 표현(view)이다. 노트에 다는 출처는 config.md의 신뢰 출처(MDN·공식 docs·Baeldung 등)에서 확인 가능한 것만 — **URL을 지어내지 않는다.**
+이 모든 것에서 **source of truth는 우리 메모리**(learning-state)와 **내보낸 노트**(개념 관계)이고 Obsidian 아티팩트는 그 표현(view)이다. 노트에 다는 출처는 config.md의 신뢰 출처(MDN·공식 docs·Baeldung 등)에서 확인 가능한 것만 — **URL을 지어내지 않는다.**
 
 ## init 절차 (`/code-tutor init`)
 
@@ -151,7 +151,7 @@ init 없이 사용 중일 때는 첫 질문 시점에 `.claude/tutor/` 디렉토
 ## end 절차 (`/code-tutor end`)
 
 1. 이번 세션의 **사건 목록**을 키워드별로 정리한다: 설명 받음 / 예제 봄 / 후속 질문함 / Feynman 통과 / 자기보고 / 발견한 연결. 판단("이해한 듯")이 아니라 실제 일어난 사건만. 이 목록의 근거는 대화 컨텍스트다.
-2. `tutor-scribe` 서브에이전트에 위임: 사건 목록 + 프로젝트 `.claude/tutor/` 경로를 넘겨 learning-state·knowledge-graph·bookmarks·learning-report 일괄 갱신
+2. `tutor-scribe` 서브에이전트에 위임: 사건 목록 + 프로젝트 `.claude/tutor/` 경로를 넘겨 learning-state·bookmarks·learning-report 일괄 갱신
 3. (config 있으면) 아직 노트로 승격 안 된 소주제를 vault에 내보내고(신뢰 출처 포함), graph-html-maker로 지식 그래프 HTML을 최신화한다.
 4. scribe의 갱신 보고를 확인한 후, 사용자에게 Learning Mode 형식의 요약 출력 (Feynman 체크 포함)
 
