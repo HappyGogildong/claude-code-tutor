@@ -140,6 +140,10 @@ description: AI가 생성한 코드를 사용자가 자신의 지식으로 내�
 
 이 모든 것에서 **source of truth는 우리 메모리**(learning-state)와 **내보낸 노트**(개념 관계)이고 Obsidian 아티팩트는 그 표현(view)이다. 노트에 다는 출처는 config.md의 신뢰 출처(MDN·공식 docs·Baeldung 등)에서 확인 가능한 것만 — **URL을 지어내지 않는다.**
 
+## 쉽게 설명 (ELI5)
+
+사용자가 `/code-tutor eli5 <주제>`, "쉽게 설명", "ELI5", "그림으로 쉽게" 등을 요청하면 [references/eli5.md](references/eli5.md)를 따른다 — 아무것도 모르는 사람 기준으로, **큰 그림·적은 글자의 HTML 아티팩트**로 설명한다. (Obsidian config와 무관하게 동작.)
+
 ## init 절차 (`/code-tutor init`)
 
 1. tutor-explorer에게 전체 스캔 요청: 기술 스택, 레이어 구조, 주요 진입점, 디렉토리별 역할
